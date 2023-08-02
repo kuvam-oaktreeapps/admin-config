@@ -2,7 +2,7 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { KitConfigField } from "../schema";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { InputSwitch } from "primereact/inputswitch";
 import { Dropdown } from "primereact/dropdown";
 import { widgets } from "../constants";
@@ -12,66 +12,90 @@ import { useParams } from "react-router-dom";
 
 interface Props {
   editField?: KitConfigField;
+  setEditField: (field: KitConfigField | undefined) => void;
   visible: boolean;
   setVisible: (visible: boolean) => void;
 }
 
-export default function CreateNewFieldDialog({ editField, visible, setVisible }: Props) {
+const defaultFieldValue: KitConfigField = {
+  name: "",
+  inline: false,
+  tableDisplay: false,
+  widget: "InputText",
+  options: [],
+  required: false,
+  unique: false,
+};
+
+export default function CreateNewFieldDialog({ editField, setEditField, visible, setVisible }: Props) {
   const params = useParams();
 
   const [resources, setResources] = useRecoilState(resourcesAtom);
 
   const resource = resources[params.resource as string];
 
-  const [field, setField] = useState<KitConfigField>(
-    editField || {
-      name: "",
-      inline: false,
-      tableDisplay: false,
-      widget: "InputText",
-      options: [],
-      required: false,
-      unique: false,
-    }
-  );
+  const [field, setField] = useState<KitConfigField>(defaultFieldValue);
+
+  const closeDialog = () => {
+    setVisible(false);
+    setField(defaultFieldValue);
+    setEditField(undefined);
+  };
 
   const saveField = () => {
+    setResources((resources) => {
+      const newCrudFields: any[] = [];
+
+      resource.crudFields.forEach((crudField) => {
+        if (crudField.name === editField?.name) {
+          newCrudFields.push(field);
+        } else {
+          newCrudFields.push(crudField);
+        }
+      });
+
+      return {
+        ...resources,
+        [params.resource as string]: {
+          ...resource,
+          crudFields: newCrudFields,
+        },
+      };
+    });
+
+    closeDialog();
+  };
+
+  const createField = () => {
     setResources((resources) => ({
       ...resources,
       [params.resource as string]: {
         ...resource,
-        crudFields: [
-          ...(resource.crudFields || []),
-          {
-            ...field,
-            options: field.options.filter((option) => option.name && option.value),
-          },
-        ],
+        crudFields: [...(resource.crudFields || []), field],
       },
     }));
 
-    setVisible(false);
+    closeDialog();
   };
+
+  useEffect(() => {
+    if (editField) setField(editField);
+  }, [editField]);
 
   return (
     <Dialog
       header={editField ? `Edit field '${editField?.name}'` : "Add New Field"}
       visible={visible}
       className="w-7"
-      onHide={() => setVisible(false)}
+      onHide={closeDialog}
       footer={
         <div>
-          <Button
-            label="Cancel"
-            icon="pi pi-times"
-            onClick={() => setVisible(false)}
-            className="p-button-text"
-          />
+          <Button label="Cancel" icon="pi pi-times" onClick={closeDialog} className="p-button-text" />
           <Button
             disabled={!field.name.length}
             label="Save"
             icon="pi pi-check"
-            onClick={saveField}
+            onClick={editField ? saveField : createField}
             autoFocus
             severity="success"
           />

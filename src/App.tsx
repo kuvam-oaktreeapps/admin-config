@@ -1,30 +1,16 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { fetcher } from "./fetcher";
 import ResourcePage from "./routes/ResourcePage";
-import { KitConfig, KitConfigScreen } from "./schema";
 import Navbar from "./components/Navbar";
-import { useRecoilState } from "recoil";
-import { resourcesAtom } from "./atoms";
+import useCliConfig from "./hooks/useCliConfig";
 
 export default function App() {
-  const [resources, setResources] = useRecoilState(resourcesAtom);
-
-  fetcher.useQuery<KitConfig>("config", {
-    onSuccess: (data) => {
-      const resources: { [key: string]: KitConfigScreen } = {};
-      data.resources.forEach((resource) => {
-        resources[resource.name.toLowerCase()] = resource;
-      });
-
-      setResources(resources);
-    },
-  });
+  const { resources } = useCliConfig();
 
   return (
     <section>
-      <Navbar />
       <BrowserRouter>
-        {Object.keys(resources).length && (
+        <Navbar />
+        {Object.keys(resources).length > 0 && (
           <Routes>
             <Route path="/:resource" element={<ResourcePage />} />
           </Routes>

@@ -1,7 +1,7 @@
 import { useRecoilState } from "recoil";
 import type { KitConfig, KitConfigScreen } from "../schema";
 import { fetcher } from "../fetcher";
-import { resourcesAtom } from "../atoms";
+import { projectHasOnlyAtom, resourcesAtom } from "../atoms";
 import { useState } from "react";
 
 interface Props {
@@ -10,9 +10,11 @@ interface Props {
 
 export default function useCliConfig(opts: Props = { localState: false }) {
   const [resources, setResources] = useRecoilState(resourcesAtom);
+  const [projectHasOnly, setProjectHasOnly] = useRecoilState(projectHasOnlyAtom);
+
   const [localRes, setLocalRes] = useState(resources);
 
-  const { refetch } = fetcher.useQuery<KitConfig>("config", {
+  const { refetch } = fetcher.useQuery<KitConfig & { hasOnly: "webapp" | "server" | undefined }>("config", {
     onSuccess: (data) => {
       const resources: { [key: string]: KitConfigScreen } = {};
       data.resources.forEach((resource) => {
@@ -24,10 +26,13 @@ export default function useCliConfig(opts: Props = { localState: false }) {
       } else {
         setResources(resources);
       }
+
+      setProjectHasOnly(data.hasOnly);
     },
   });
 
   return {
+    projectHasOnly,
     resources: opts.localState ? localRes : resources,
     refetchResources: refetch,
   };

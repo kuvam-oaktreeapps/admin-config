@@ -80,7 +80,7 @@ export default function Navbar() {
           navigate(`/${e.value.label?.split(".")[0]}`);
         }}
         model={Object.keys(resources).map((resource) => ({
-          label: `${resource}.json`,
+          label: resource,
           icon: "pi pi-fw pi-file",
         }))}
         activeIndex={Object.keys(resources).findIndex((resource) => resource === resourceParam)}

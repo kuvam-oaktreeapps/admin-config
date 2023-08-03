@@ -5,3 +5,8 @@ export const resourcesAtom = atom<{ [key: string]: KitConfigScreen }>({
   key: "resources",
   default: {},
 });
+
+export const projectHasOnlyAtom = atom<"webapp" | "server" | undefined>({
+  default: undefined,
+  key: "projectHasOnly",
+});

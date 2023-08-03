@@ -113,6 +113,8 @@ export default function CreateNewFieldDialog({ editField, setEditField, visible,
       <div className="w-full flex align-items-center">
         <p className="font-bold mr-3">Is Inline</p>
         <InputSwitch
+          tooltip="Turning this on will make the field appear in the same row as the subsequent fields marked as inline in the web app."
+          tooltipOptions={{ position: "right" }}
           checked={field.inline}
           onChange={(e) => setField((field) => ({ ...field, inline: !!e.value }))}
         />
@@ -137,6 +139,8 @@ export default function CreateNewFieldDialog({ editField, setEditField, visible,
       <div className="w-full flex align-items-center">
         <p className="font-bold mr-3">Table Display</p>
         <InputSwitch
+          tooltip="Turning this on will make the field appear in the data table in the web app."
+          tooltipOptions={{ position: "right" }}
           checked={field.tableDisplay}
           onChange={(e) => setField((field) => ({ ...field, tableDisplay: !!e.value }))}
         />
@@ -144,6 +148,7 @@ export default function CreateNewFieldDialog({ editField, setEditField, visible,
 
       <p className="font-bold">Widget</p>
       <Dropdown
+        filter
         className="w-full mb-5"
         value={field.widget}
         options={widgets}

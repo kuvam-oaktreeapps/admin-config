@@ -6,8 +6,8 @@ import { InputText } from "primereact/inputtext";
 import { KitConfigField } from "../schema";
 import { Card } from "primereact/card";
 import { Dropdown } from "primereact/dropdown";
-import { useRecoilState } from "recoil";
-import { resourcesAtom } from "../atoms";
+import { useRecoilState, useRecoilValue } from "recoil";
+import { projectHasOnlyAtom, resourcesAtom } from "../atoms";
 import { Button } from "primereact/button";
 import CreateNewFieldDialog from "../components/CreateNewFieldDialog";
 import { fetcher } from "../fetcher";
@@ -22,6 +22,7 @@ export default function ResourcePage({}) {
   const dt = useRef<DataTable<any> | null>(null);
 
   const [resources, setResources] = useRecoilState(resourcesAtom);
+  const projectHasOnly = useRecoilValue(projectHasOnlyAtom);
 
   const resource = resources[params.resource || ""];
 
@@ -137,7 +138,7 @@ export default function ResourcePage({}) {
       {resource && (
         <Card
           header={
-            <div className="px-4 pt-4 flex justify-content-between align-items-center">
+            <div className="px-4 pt-2 flex justify-content-between align-items-center">
               <div>
                 <h2 className="font-bold">Resource Specifications</h2>
                 <p className="text-sm text-gray-500">Adjust and edit core config of the resource</p>
@@ -148,58 +149,59 @@ export default function ResourcePage({}) {
           }
           className="my-5 border-1 border-gray-300 shadow-none"
         >
-          {/* <p>Resource Name</p>
-          <InputText
-            value={resource.name}
-            onChange={(e) =>
-              setResources({
-                ...resources,
-                [params.resource as string]: { ...resource, name: e.target.value },
-              })
-            }
-            className="w-4 mb-5"
-            placeholder="Resource Name"
-          /> */}
+          <div className="flex gap-5">
+            <div className="w-full">
+              <p>Resource URL</p>
+              <InputText
+                value={resource.url}
+                onChange={(e) =>
+                  setResources({
+                    ...resources,
+                    [params.resource as string]: { ...resource, url: e.target.value },
+                  })
+                }
+                className="w-full"
+                placeholder="Resource URL"
+              />
+            </div>
 
-          <p>Resource URL</p>
-          <InputText
-            value={resource.url}
-            onChange={(e) =>
-              setResources({
-                ...resources,
-                [params.resource as string]: { ...resource, url: e.target.value },
-              })
-            }
-            className="w-4 mb-5"
-            placeholder="Resource URL"
-          />
+            {(projectHasOnly === "server" || projectHasOnly === undefined) && (
+              <div className="w-full">
+                <p>MongoDB Collection Name</p>
+                <InputText
+                  value={resource.collectionName}
+                  onChange={(e) =>
+                    setResources({
+                      ...resources,
+                      [params.resource as string]: { ...resource, collectionName: e.target.value },
+                    })
+                  }
+                  className="w-full"
+                  placeholder="MongoDB Collection Name"
+                />
+              </div>
+            )}
 
-          <p>Resource's MongoDB Collection Name</p>
-          <InputText
-            value={resource.collectionName}
-            onChange={(e) =>
-              setResources({
-                ...resources,
-                [params.resource as string]: { ...resource, collectionName: e.target.value },
-              })
-            }
-            className="w-4 mb-5"
-            placeholder="Resource's MongoDB Collection Name"
-          />
-
-          <p>Exists in only:</p>
-          <Dropdown
-            value={resource.only}
-            options={["webapp", "server", "both"]}
-            onChange={(e) =>
-              setResources((resources) => ({
-                ...resources,
-                [params.resource as string]: { ...resource, only: e.value === "both" ? undefined : e.value },
-              }))
-            }
-            placeholder="Select a Only"
-            className="w-4 mb-5"
-          />
+            <div className="w-full">
+              <p>Exists in only:</p>
+              <Dropdown
+                value={projectHasOnly ? projectHasOnly : resource.only === undefined ? "both" : resource.only}
+                disabled={!!projectHasOnly}
+                options={["webapp", "server", "both"]}
+                onChange={(e) =>
+                  setResources((resources) => ({
+                    ...resources,
+                    [params.resource as string]: {
+                      ...resource,
+                      only: e.value === "both" ? undefined : e.value,
+                    },
+                  }))
+                }
+                placeholder="Select a Only"
+                className="w-full"
+              />
+            </div>
+          </div>
         </Card>
       )}
 
@@ -228,15 +230,27 @@ export default function ResourcePage({}) {
         <Column
           field="actions"
           header="Actions"
-          body={(field) => (
+          body={(row) => (
             <>
               <Button
-                onClick={() => openEditDialog(field)}
+                onClick={() => openEditDialog(row)}
                 className="mr-2"
                 icon="pi pi-pencil"
                 severity="info"
               />
-              <Button icon="pi pi-trash" severity="danger" />
+              <Button
+                icon="pi pi-trash"
+                severity="danger"
+                onClick={() =>
+                  setResources((resources) => ({
+                    ...resources,
+                    [params.resource as string]: {
+                      ...resource,
+                      crudFields: resource.crudFields.filter((field) => field.name !== row.name),
+                    },
+                  }))
+                }
+              />
             </>
           )}
         ></Column>

@@ -82,6 +82,20 @@ export default function CreateNewFieldDialog({ editField, setEditField, visible,
     if (editField) setField(editField);
   }, [editField]);
 
+  const onWidgetChangeHandle = (e: any) => {
+    setField((field) => ({ ...field, widget: e.value }))
+    if(["RadioButton", "MultiSelect", "Dropdown"].includes(e.value)){
+      setField((field) => ({ ...field, options: [...field.options, { name: "", value: "" }] }))
+    }
+  }
+
+  const removeOption = (index: number) => {
+    console.log(index)
+    let data = [...field.options];
+    data.splice(index, 1);
+    setField((field) => ({ ...field, options: data }))
+  }
+
   return (
     <Dialog
       header={editField ? `Edit field '${editField?.name}'` : "Add New Field"}
@@ -149,20 +163,31 @@ export default function CreateNewFieldDialog({ editField, setEditField, visible,
       <p className="font-bold">Widget</p>
       <Dropdown
         filter
-        className="w-full mb-5"
+        className="w-full"
         value={field.widget}
         options={widgets}
-        onChange={(e) => setField((field) => ({ ...field, widget: e.value }))}
+        onChange={(e) => onWidgetChangeHandle(e)}
       />
 
       {["RadioButton", "MultiSelect", "Dropdown"].includes(field.widget || "") && (
         <>
           <p className="font-bold">Options</p>
           <div>
+            {field.options.length > 0 ?
+            <div className="w-full flex flex-row gap-3">
+              <div className="w-full">
+                <p>Name</p>
+              </div>
+              <div className="w-full">
+                <p>Value</p>
+              </div>
+              <div className="w-auto">
+              </div>
+            </div> : null }
+
             {field.options.map((option, index) => (
-              <div className="w-full flex flex-row gap-3">
+              <div className="w-full flex flex-row gap-3" key={index}>
                 <div className="w-full">
-                  <p>Name</p>
                   <InputText
                     value={option.name}
                     onChange={(e) => {
@@ -172,12 +197,10 @@ export default function CreateNewFieldDialog({ editField, setEditField, visible,
                       setField((field) => ({ ...field, options: newOptions }));
                     }}
                     placeholder="New York"
-                    className="w-full mb-5"
+                    className="w-full mb-3"
                   />
                 </div>
-
                 <div className="w-full">
-                  <p>Value</p>
                   <InputText
                     value={option.value}
                     onChange={(e) => {
@@ -187,22 +210,31 @@ export default function CreateNewFieldDialog({ editField, setEditField, visible,
                       setField((field) => ({ ...field, options: newOptions }));
                     }}
                     placeholder="NY"
-                    className="w-full mb-5"
+                    className="w-full mb-3"
                   />
+                </div>
+                <div className="w-auto">
+                  <Button
+                      icon="pi pi-trash"
+                      severity={"danger"}
+                      outlined
+                      onClick={() =>removeOption(index)}
+                      />
                 </div>
               </div>
             ))}
 
-            <center>
+            <div>
               <Button
-                label="Add"
+                label="Add New Option"
                 icon="pi pi-plus"
-                className="p-button-text"
+                severity={"secondary"}
+                outlined
                 onClick={() =>
                   setField((field) => ({ ...field, options: [...field.options, { name: "", value: "" }] }))
                 }
               />
-            </center>
+            </div>
           </div>
         </>
       )}

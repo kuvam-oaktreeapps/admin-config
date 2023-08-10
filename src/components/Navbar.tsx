@@ -7,13 +7,11 @@ import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { fetcher } from "../fetcher";
 import useCliConfig from "../hooks/useCliConfig";
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, useLocation } from "react-router-dom";
 export default function Navbar() {
   const navigate = useNavigate();
-
-  const resourceParam = window.location.pathname.split("/").at(-1) as string;
-
+  const location = useLocation();
+  const resourceParam = location.pathname.split('/')[1];
   const resources = useRecoilValue(resourcesAtom);
 
   const [visible, setVisible] = useState(false);

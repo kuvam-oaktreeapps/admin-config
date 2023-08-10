@@ -13,19 +13,15 @@ import CreateNewFieldDialog from "../components/CreateNewFieldDialog";
 import { fetcher } from "../fetcher";
 import useCliConfig from "../hooks/useCliConfig";
 import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import {Tag} from "primereact/tag";
 
 export default function ResourcePage({}) {
   const navigate = useNavigate();
-
   const params = useParams();
-
   const dt = useRef<DataTable<any> | null>(null);
-
   const [resources, setResources] = useRecoilState(resourcesAtom);
   const projectHasOnly = useRecoilValue(projectHasOnlyAtom);
-
   const resource = resources[params.resource || ""];
-
   const { refetchResources } = useCliConfig();
 
   const [selection, setSelection] = useState<KitConfigField[]>([]);
@@ -56,6 +52,18 @@ export default function ResourcePage({}) {
     setSelection([]);
   };
 
+  const getSeverity = (value: any) => {
+    if(value){
+      return 'success';
+    } else {
+      return 'danger';
+    }
+  };
+
+  const statusBodyTemplate = (rowData: any, fieldName: string) => {
+    return <Tag value={rowData[fieldName] == true ? "Yes" : "No"} severity={getSeverity(rowData[fieldName])} />;
+  };
+
   const deleteResource = async () => {
     confirmDialog({
       message: "Deleting a resource will delete all of its data. Are you sure you want to continue?",
@@ -74,10 +82,7 @@ export default function ResourcePage({}) {
   };
 
   const saveChanges = async () => {
-    console.log(resource);
-
     const oldResourceName = configResources[params.resource as string].name.toLowerCase();
-
     await updateResource({ name: oldResourceName, resource });
     refetchConfigResources();
     refetchResources();
@@ -116,7 +121,7 @@ export default function ResourcePage({}) {
     <Button
       loading={isUpdating}
       label="Save Changes"
-      className="mt-5"
+      className="mt-3"
       disabled={!contentIsChanged}
       onClick={saveChanges}
     />
@@ -223,10 +228,10 @@ export default function ResourcePage({}) {
           )}
         ></Column>
         <Column field="widget" header="Widget"></Column>
-        <Column field="unique" header="Unique"></Column>
-        <Column field="required" header="Required"></Column>
-        <Column field="inline" header="Inline"></Column>
-        <Column field="tableDisplay" header="Table Display"></Column>
+        <Column field="unique" header="Unique" body={(rowData) => statusBodyTemplate(rowData, "unique")}></Column>
+        <Column field="required" header="Required" body={(rowData) => statusBodyTemplate(rowData, "required")}></Column>
+        <Column field="inline" header="Inline" body={(rowData) => statusBodyTemplate(rowData, "inline")}></Column>
+        <Column field="tableDisplay" header="Table Display" body={(rowData) => statusBodyTemplate(rowData, "tableDisplay")}></Column>
         <Column
           field="actions"
           header="Actions"
